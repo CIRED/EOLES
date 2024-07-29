@@ -79,6 +79,10 @@ Pour utiliser le modèle, il suffit d'importer la classe ModelEOLES, d'en créer
 
 Des examples de données d'entrée sont fournies dans le dossier **inputs**.\
 Le chemin d'accès à chaque fichier de donnée peut être modifié dans les fichier de configuration.\
-Des profils de demande et de production supplémentaires peuvent être trouvés dans [ce dépôt Zenodo](https://doi.org/10.5281/zenodo.13124746)\
+Des profils de demande et de production supplémentaires peuvent être trouvés dans [ce dépôt Zenodo](https://doi.org/10.5281/zenodo.13124746)
 
 Le format attendu pour les données d'entrée est clarifié pour chaque type (constante ou profil) dans la fonction utilitaire associée dans ```utils.py```.
+
+
+
+La version originale de ce README a été écrite par Quentin Bustarret

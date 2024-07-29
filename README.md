@@ -88,6 +88,10 @@ To use the model, import the ModelEOLES class, create an instance of the model w
 
 Example input data are provided in the **inputs** folder.\
 The path to each data file can be modified in the config files.\
-Supplementary demand and production profiles can be found in [this Zenodo repository](https://doi.org/10.5281/zenodo.13124746)\
+Supplementary demand and production profiles can be found in [this Zenodo repository](https://doi.org/10.5281/zenodo.13124746)
 
 The expected data format is clarified for each data type (constant or profile) in the relevant utility function in ```utils.py```.
+
+
+
+This README was originally written by Quentin Bustarret

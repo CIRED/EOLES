@@ -1,0 +1,15 @@
+offshore_float,0.032
+offshore_ground,0.032
+onshore,0.032
+pv_ground_S,0.014
+pv_roof_com_S,0.014
+pv_roof_indiv_S,0.014
+pv_ground_EW,0.014
+pv_roof_com_EW,0.014
+pv_roof_indiv_EW,0.014
+river,0
+marine,0
+waste,0
+biomass_coge,0
+geothermal_coge,0
+ocgt_coge,0

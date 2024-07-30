@@ -1,7 +1,8 @@
 # Eoles
 
-Eoles est un modèle d'optimisation de l'investissement et de l'exploitation du système énergétique en France cherchant à minimiser le coût total tout en satisfaisant la demande en énergie. \
+Eoles est un modèle d'optimisation de l'investissement et de l'exploitation du système énergétique en France cherchant à minimiser le coût total tout en assurant une demande en énergie exogène. \
 Voici une présentation d'une version antérieure du modèle : _http://www.centre-cired.fr/quel-mix-electrique-optimal-en-france-en-2050/_ \
+La plupart des versions du modèle, ainsi que des articles les utilisant, sont présentées dans https://www.centre-cired.fr/the-eoles-family-of-models/
 
 ---
 
@@ -83,6 +84,6 @@ Des profils de demande et de production supplémentaires peuvent être trouvés 
 
 Le format attendu pour les données d'entrée est clarifié pour chaque type (constante ou profil) dans la fonction utilitaire associée dans ```utils.py```.
 
-
+---
 
 La version originale de ce README a été écrite par Quentin Bustarret

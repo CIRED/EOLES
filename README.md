@@ -1,7 +1,8 @@
 # Eoles
 
-Eoles model performs optimization of the investment and operation of the energy system in order to minimize the total cost while satisfying energy demand. \
+The Eoles model optimizes the investment and operation of the energy system in order to minimize the total cost while satisfying exogenous energy demands. \
 Here is a presentation of an earlier version of the model: _http://www.centre-cired.fr/quel-mix-electrique-optimal-en-france-en-2050/_ \
+Most of the model versions, as well as published articles using them, are presented at https://www.centre-cired.fr/the-eoles-family-of-models/
 
 ---
 
@@ -94,6 +95,6 @@ Supplementary demand and production profiles can be found in [this Zenodo reposi
 
 The expected data format is clarified for each data type (constant or profile) in the relevant utility function in ```utils.py```.
 
-
+---
 
 This README was originally written by Quentin Bustarret

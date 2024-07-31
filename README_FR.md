@@ -18,6 +18,7 @@ Python est un langage de programmation interprété, utilisé avec Pyomo il va p
 Vous pouvez télécharger la dernière version sur le site dédié : *https://www.python.org/downloads/* \
 Ensuite il vous suffit de l'installer sur votre ordinateur. \
 Si vous comptez installer Conda ou si vous avez installé Condé sur votre ordinateur, Python à des chances d'être déjà installé.
+Le modèle nécessite python3. Nous recommendons d'utiliser une version utlérieure à python3.10 (les versions antérieures à 3.9 n'ont pas été testées)
 
 * **Conda** ou **Pip** selon votre préférence :
 Conda et Pip sont des gestionnaires de paquets pour Python.
@@ -33,21 +34,21 @@ Conda et Pip sont des gestionnaires de paquets pour Python.
     _https://pip.pypa.io/en/stable/installing/_ \
     Pip est également installé si vous avez installé Conda.
 
-* **Pandas** :
-Pandas est une librairie de Python qui permet de manipuler et analyser des données facilement. \
-Pandas est open-source.
-Ouvrez une interface de commande et tapez ceci : \
-```conda install pandas```, avec Conda \
-```pip install pandas```, avec Pip \
-Vous pouvez retrouver plus d'information ici : _https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html_
+* Installer les dépendances avec **Conda**:
+Déplacez-vous jusqu'au dossier de votre choix
+Créer l'environnement et installer les dépendances: ```conda env create -f environment.yml```
+Activer l'environnement : ```conda activate envEOLES```
+Si vous souhaitez utiliser Jupyter Notebook :
+Utiliser ```conda install -c anaconda ipykernel``` and ```python -m ipykernel install --user --name=envEOLES```
+L'environnement sera alors disponible dans la liste des kernel.
 
-* **Pyomo** :
-Pyomo est un langage de modélisation d'optimisation basé sur le langage Python. \
-Pyomo est open-source.
-Ouvrez une interface de commande et tapez ceci : \
-```conda install -c conda-forge pyomo```, avec Conda \
-```pip install pyomo```, avec Pip \
-Vous pouvez retrouver plus d'information ici : _https://pyomo.readthedocs.io/en/stable/installation.html_
+* Installer les dépendances avec **Pip**:
+Créer un environnement virtuel: ```python -m venv envEOLES```
+Si vous tuilisez un autre nom pour l'environnement et avez prévu d'envoyer vos modifications vers le github, souvenez-vous d'exclure le dossier de l'environnement des commit.
+Activer l'environnement :
+Windows : ```envEOLES\Scripts\activate```
+macOS/Linux: ```source envEOLES/bin/activate```
+Installer les dépendances : ```pip install -r requirements.txt```
 
 * **Solveur** :
 Le solveur que ce modèle utilise est le solveur Gurobi, bien plus rapide que le solveur Cbc. \
@@ -59,7 +60,7 @@ Pour utiliser Gurobi :
 
 #### **Récupération du code :**
 
-Si vous n'avez pas installé Git sur votre ordinateur, vous pouvez téléchargez le dossier sur ce GitLab, dans le format que vous souhaitez.
+Si vous n'avez pas installé Git sur votre ordinateur, vous pouvez téléchargez le dossier de Github ou Zenodo, dans le format que vous souhaitez.
 Sinon, vous pouvez récupérer les fichiers de ce GitLab à travers la commande :\
 ```git clone https://github.com/CIRED/EOLES.git```\
 Un dossier sera créé dans le répertoire courant avec tout les fichiers contenus dans ce GitLab. \

@@ -11,7 +11,8 @@ Here is a presentation of an earlier version of the model: _http://www.centre-ci
 
 #### **Installing the dependencies**
 
-In order to run the model you will need to install some dependencies that this program needs to run:
+The model requires some python packages as well as the Gurobi solver. 
+We provide both a requirements.txt and an environment.yml file for the packages dependencies, and a guide to getting an academic licence for Gurobi.
 
 * **Python** :
 Python is an interpreted programming language, with Pyomo it will allow us to model Eoles. \
@@ -19,7 +20,7 @@ You can download the latest version on the dedicated website : *https://www.pyth
 Then you just have to install it on your computer. \
 If you plan to install Conda or if you have Conda installed on your computer,
 Python is likely to be already installed.
-The model requires python 3 to run properly.
+The model requires python 3 to run properly, and it is recommended to use at least python 3.10 (older versions might work but were not tested)
 
 * **Conda** ou **Pip** depending on your preference:
 Conda and Pip are package managers for Python.
@@ -35,21 +36,22 @@ Conda and Pip are package managers for Python.
     _https://pip.pypa.io/en/stable/installing/_ \
     Pip is installed by default with Conda.
 
-* **Pandas** :
-Pandas is a Python library that allows you to manipulate and analyze data easily. \
-Pandas is open-source. \
-Open a command line and type this to install pandas: \
-```conda install pandas```, with Conda \
-```pip install pandas```, with Pip \
-You can find more information here: _https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html_
+* Installing dependencies with **Conda**:
+Navigate to your directory of choice.
+Create the environment and install dependencies : ```conda env create -f environment.yml```
+Activate the environment : ```conda activate envEOLES```
+If you wish to use Jupyter Notebook :
+use ```conda install -c anaconda ipykernel``` and ```python -m ipykernel install --user --name=envEOLES```
+The environment will then appear in the kernel list.
 
-* **Pyomo** :
-Pyomo is an optimization modeling language based on the Python language. \
-Pyomo is open-source.\
-Open a command interface and type this to install pyomo : \
-```conda install -c conda-forge pyomo```, with Conda \
-```pip install pyomo```, with Pip \
-You can find more information here: _https://pyomo.readthedocs.io/en/stable/installation.html_
+* Installing dependencies with **Pip**:
+Navigate to your directory of choice.
+Create a virtual environment: ```python -m venv envEOLES```
+If you use another name for the environment and plan on pushing changes to the github, remember to exclude the environment folder from the commit.
+Activate the virtual environment :
+Windows : ```envEOLES\Scripts\activate```
+macOS/Linux: ```source envEOLES/bin/activate```
+Install dependencies : ```pip install -r requirements.txt```
 
 * **Solver** :
 The solver that this model uses is Gurobi. \
@@ -65,8 +67,8 @@ To use Gurobi :
 
 #### **How to get the code :**
 
-If you don't have git installed on your computer, you can download the folder on this GitLab. \
-Else, you can retrieve the files from this GitLab through the command line : \
+If you don't have git installed on your computer, you can download the folder on Github or Zenodo. \
+Else, you can retrieve the files from this Github through the command line : \
 ```git clone https://github.com/CIRED/EOLES.git``` \
 A folder will be created in the current directory with all the files contained in this GitLab.
 

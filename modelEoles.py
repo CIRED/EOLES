@@ -619,8 +619,8 @@ class ModelEOLES():
                 charge += self.phs_inflows.iat[h]
             discharge = model.str_output[storage_tecs, h] / self.efficiency_storage_out.at[storage_tecs]
             if storage_tecs in model.reserve:
-                discharge += model.frr[storage_tecs, h]*self.reserve_activation_rate.at["frr"]
-                discharge += model.fcr[storage_tecs, h]*self.reserve_activation_rate.at["fcr"]
+                discharge += model.frr[storage_tecs, h]*self.reserve_activation_rate.at["frr"] / self.efficiency_storage_out.at[storage_tecs]
+                discharge += model.fcr[storage_tecs, h]*self.reserve_activation_rate.at["fcr"] / self.efficiency_storage_out.at[storage_tecs]
             flux = charge - discharge
             return model.state_of_charge[storage_tecs, hPOne]*100 == model.state_of_charge[storage_tecs, h]*100 + flux*100
 
@@ -764,7 +764,7 @@ class ModelEOLES():
         def h2_saltcavern_discharge_constraint_rule(model):
             """Constraint on discharge capacity of h2_saltcavern. This is a bit ad hoc, based on discussions with Marie-Alix,
             and some extrapolations for the future capacity of h2_saltcavern."""
-            return model.discharging_power["h2_saltcavern"]*10 <= model.energy_capacity['h2_saltcavern']*10 * self.h2_saltcavern_discharge_to_storage_ratio*10
+            return model.discharging_power["h2_saltcavern"]*10 <= model.energy_capacity['h2_saltcavern'] * self.h2_saltcavern_discharge_to_storage_ratio*10
 
         self.model.h2_saltcavern_discharge_constraint = Constraint(rule=h2_saltcavern_discharge_constraint_rule)
 
@@ -772,7 +772,7 @@ class ModelEOLES():
         def h2_saltcavern_charge_constraint_rule(model):
             """Constraint on charging capacity of h2_saltcavern. This is a bit ad hoc, based on discussions with Marie-Alix,
             and some extrapolations for the future capacity of h2_saltcavern."""
-            return model.charging_power["h2_saltcavern"]*10 <= model.energy_capacity['h2_saltcavern']*10 * self.h2_saltcavern_charge_to_storage_ratio*10
+            return model.charging_power["h2_saltcavern"]*10 <= model.energy_capacity['h2_saltcavern'] * self.h2_saltcavern_charge_to_storage_ratio*10
 
         self.model.h2_saltcavern_charge_constraint = Constraint(rule=h2_saltcavern_charge_constraint_rule)
 

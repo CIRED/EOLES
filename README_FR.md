@@ -6,7 +6,7 @@ La plupart des versions du modèle, ainsi que des articles les utilisant, sont p
 
 ---
 
-### Lancer le modèle avec Pyomo
+### Installer le code et les dépendances
 
 ---
 
@@ -57,7 +57,7 @@ Des licenses gratuites sont mises à dispositions pour les chercheurs et étudia
 Pour utiliser Gurobi :
     * Se créer un compte et télécharger Gurobi Optimizer ici : _https://www.gurobi.com/downloads/_
     * Demander une license académique gratuite : _https://www.gurobi.com/downloads/end-user-license-agreement-academic/_
-    * Utiliser la commande ```grbgetkey``` pour importer sa license, comme indiquer sur celle-ci.
+    * Utiliser la commande ```grbgetkey``` pour importer sa license, comme indiquer sur celle-ci. \
 Pour utiliser Gurobi sur Inari :
 	* Demander une autre licence académique et l'installer avec ```grbgetkey``` sur Inari
 	* Ajouter ces lignes dans votre .bashrc :

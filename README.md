@@ -63,7 +63,16 @@ You can also use another solver if you wish. \
 To use Gurobi :
     * Create an account and download Gurobi Optimizer here : _https://www.gurobi.com/downloads/_
     * Request a free academic license here : _https://www.gurobi.com/downloads/end-user-license-agreement-academic/_
-    * Use the ```grbgetkey``` command to import your license. The exact command is given with your license.
+    * Use the ```grbgetkey``` command to install your license. The exact command is given with your license.
+To use Gurobi on Inari :
+	* Request another free academic licence and use the ```grbgetkey``` command to install it on your Inari user account
+	* Add the following lines to your .bashrc :
+		```# gurobi path and licence
+		export GUROBI_HOME=/data/software/gurobi1002/linux64
+		export PATH=$GUROBI_HOME/bin:$PATH
+		export GRB_LICENSE_FILE=/home/hippolyte/gurobi.lic```
+
+
 
 
 #### **How to get the code :**

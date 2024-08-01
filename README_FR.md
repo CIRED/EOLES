@@ -58,6 +58,13 @@ Pour utiliser Gurobi :
     * Se créer un compte et télécharger Gurobi Optimizer ici : _https://www.gurobi.com/downloads/_
     * Demander une license académique gratuite : _https://www.gurobi.com/downloads/end-user-license-agreement-academic/_
     * Utiliser la commande ```grbgetkey``` pour importer sa license, comme indiquer sur celle-ci.
+Pour utiliser Gurobi sur Inari :
+	* Demander une autre licence académique et l'installer avec ```grbgetkey``` sur Inari
+	* Ajouter ces lignes dans votre .bashrc :
+		```# gurobi path and licence
+		export GUROBI_HOME=/data/software/gurobi1002/linux64
+		export PATH=$GUROBI_HOME/bin:$PATH
+		export GRB_LICENSE_FILE=/home/hippolyte/gurobi.lic```
 
 #### **Récupération du code :**
 

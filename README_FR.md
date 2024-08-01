@@ -61,12 +61,13 @@ Pour utiliser Gurobi :
 Pour utiliser Gurobi sur Inari :
 	* Demander une autre licence académique et l'installer avec ```grbgetkey``` sur Inari
 	* Ajouter ces lignes dans votre .bashrc :
-		```# gurobi path and licence
+		```
+  		# gurobi path and licence
 		export GUROBI_HOME=/data/software/gurobi1002/linux64
 		export PATH=$GUROBI_HOME/bin:$PATH
 		export GRB_LICENSE_FILE=/home/user/gurobi.lic
-		```\
-		En remplacant ```user``` avec votre username
+		```
+	En remplacant ```user``` avec votre username
 
 #### **Récupération du code :**
 

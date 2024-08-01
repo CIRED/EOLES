@@ -64,7 +64,9 @@ Pour utiliser Gurobi sur Inari :
 		```# gurobi path and licence
 		export GUROBI_HOME=/data/software/gurobi1002/linux64
 		export PATH=$GUROBI_HOME/bin:$PATH
-		export GRB_LICENSE_FILE=/home/hippolyte/gurobi.lic```
+		export GRB_LICENSE_FILE=/home/user/gurobi.lic
+		```\
+		En remplacant ```user``` avec votre username
 
 #### **Récupération du code :**
 

@@ -80,7 +80,7 @@ Un fichier ```.py``` d'exemple est fourni, et montre comment : importer la class
 
 ---
 
-Des examples de données d'entrée sont fournies dans le dossier **inputs**.\
+Des examples de données d'entrée permettant d'utiliser example.py sont fournies dans le dossier **inputs** et sourcés dans le fichier Sources.xml. \
 Le chemin d'accès à chaque fichier de donnée peut être modifié dans les fichier de configuration.\
 Des profils de demande et de production supplémentaires peuvent être trouvés dans [ce dépôt Zenodo](https://doi.org/10.5281/zenodo.13124746)
 
@@ -88,4 +88,5 @@ Le format attendu pour les données d'entrée est clarifié pour chaque type (co
 
 ---
 
-La version originale de ce README a été écrite par Quentin Bustarret
+La version originale de ce README a été écrite par Quentin Bustarret.
+Vous pourrez trouver les anciennes versions du modèle (code et articles pour lesquels elles ont été utilisées) sur cette page web : https://www.centre-cired.fr/the-eoles-family-of-models/

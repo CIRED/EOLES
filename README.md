@@ -90,7 +90,7 @@ An example ```.py``` file is provided, which shows how to do the following : imp
 
 ---
 
-Example input data are provided in the **inputs** folder.\
+Example input data suffisant to use example.py are provided in the **inputs** folder and described in the Sources.xml file.\
 The path to each data file can be modified in the config files.\
 Supplementary demand and production profiles can be found in [this Zenodo repository](https://doi.org/10.5281/zenodo.13124746)
 
@@ -98,4 +98,5 @@ The expected data format is clarified for each data type (constant or profile) i
 
 ---
 
-This README was originally written by Quentin Bustarret
+This README was originally written by Quentin Bustarret.
+You can find past versions of the model (code and work they were used in) at the following webpage : https://www.centre-cired.fr/the-eoles-family-of-models/

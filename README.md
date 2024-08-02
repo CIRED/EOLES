@@ -98,5 +98,5 @@ The expected data format is clarified for each data type (constant or profile) i
 
 ---
 
-This README was originally written by Quentin Bustarret.
+This README was originally written by Quentin Bustarret.\
 You can find past versions of the model (code and work they were used in) at the following webpage : https://www.centre-cired.fr/the-eoles-family-of-models/

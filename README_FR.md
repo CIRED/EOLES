@@ -88,5 +88,5 @@ Le format attendu pour les données d'entrée est clarifié pour chaque type (co
 
 ---
 
-La version originale de ce README a été écrite par Quentin Bustarret.
+La version originale de ce README a été écrite par Quentin Bustarret.\
 Vous pourrez trouver les anciennes versions du modèle (code et articles pour lesquels elles ont été utilisées) sur cette page web : https://www.centre-cired.fr/the-eoles-family-of-models/

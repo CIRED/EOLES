@@ -32,7 +32,7 @@ Python is likely to be already installed.
 The model requires python 3 to run properly, and it is recommended to use at least python 3.10 (older versions might work but were not tested)
 
 * **Conda** ou **Pip** depending on your preference:
-Conda and Pip are package managers for Python.
+Conda and Pip are package managers for Python. Conda is recommended.
     * **Conda** \
     You can find all the information you need to download and install Conda here:  \
     _https://docs.conda.io/projects/conda/en/latest/user-guide/install/_ \
@@ -72,16 +72,7 @@ To use Gurobi :
     * Create an account and download Gurobi Optimizer here : _https://www.gurobi.com/downloads/_
     * Request a free academic license here : _https://www.gurobi.com/downloads/end-user-license-agreement-academic/_
     * Use the ```grbgetkey``` command to install your license. The exact command is given with your license. \\
-To use Gurobi on Inari :
-	* Request another free academic licence and use the ```grbgetkey``` command to install it on your Inari user account
-	* Add the following lines to your .bashrc :
-		```
-  		# gurobi path and licence
-		export GUROBI_HOME=/data/software/gurobi1002/linux64
-		export PATH=$GUROBI_HOME/bin:$PATH
-		export GRB_LICENSE_FILE=/home/user/gurobi.lic
-		```
-	Replacing ```user``` with your username
+To use Gurobi on Inari : see dedicated README.
 
 ---
 

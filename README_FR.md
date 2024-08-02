@@ -10,6 +10,14 @@ La plupart des versions du modèle, ainsi que des articles les utilisant, sont p
 
 ---
 
+#### **Récupération du code :**
+
+Si vous n'avez pas installé Git sur votre ordinateur, vous pouvez téléchargez le dossier zip de Github (latest release) ou Zenodo, dans le format que vous souhaitez.
+Pour obtenir le dernier build, vous pouvez récupérer les fichiers de ce Github à travers la commande :\
+```git clone https://github.com/CIRED/EOLES.git```\
+Un dossier sera créé dans le répertoire courant avec tout les fichiers contenus dans ce Github. \
+
+
 #### **Installation des dépendances**
 
 Pour pouvoir lancer le modèle vous aurez besoin d'installer certaines dépendances dont ce programme à besoin pour fonctionner :
@@ -22,7 +30,7 @@ Si vous comptez installer Conda ou si vous avez installé Condé sur votre ordin
 Le modèle nécessite python3. Nous recommendons d'utiliser une version utlérieure à python3.10 (les versions antérieures à 3.9 n'ont pas été testées)
 
 * **Conda** ou **Pip** selon votre préférence :
-Conda et Pip sont des gestionnaires de paquets pour Python.
+Conda et Pip sont des gestionnaires de paquets pour Python. Conda est recommendé.
     * **Conda** \
     Vous pouvez retrouver toutes les informations nécéssaires pour télécharger et installer Conda ici: \
     _https://docs.conda.io/projects/conda/en/latest/user-guide/install/_ \
@@ -58,30 +66,13 @@ Pour utiliser Gurobi :
     * Se créer un compte et télécharger Gurobi Optimizer ici : _https://www.gurobi.com/downloads/_
     * Demander une license académique gratuite : _https://www.gurobi.com/downloads/end-user-license-agreement-academic/_
     * Utiliser la commande ```grbgetkey``` pour importer sa license, comme indiquer sur celle-ci. \
-Pour utiliser Gurobi sur Inari :
-	* Demander une autre licence académique et l'installer avec ```grbgetkey``` sur Inari
-	* Ajouter ces lignes dans votre .bashrc :
-		```
-  		# gurobi path and licence
-		export GUROBI_HOME=/data/software/gurobi1002/linux64
-		export PATH=$GUROBI_HOME/bin:$PATH
-		export GRB_LICENSE_FILE=/home/user/gurobi.lic
-		```
-	En remplacant ```user``` avec votre username
-
-#### **Récupération du code :**
-
-Si vous n'avez pas installé Git sur votre ordinateur, vous pouvez téléchargez le dossier de Github ou Zenodo, dans le format que vous souhaitez.
-Sinon, vous pouvez récupérer les fichiers de ce GitLab à travers la commande :\
-```git clone https://github.com/CIRED/EOLES.git```\
-Un dossier sera créé dans le répertoire courant avec tout les fichiers contenus dans ce GitLab. \
+Pour utiliser Gurobi sur Inari : voir le README dédié.
 
 #### **Utilisation du modèle :**
 
 Le modèle Eoles est écrit sous forme de classe contenue dans le package ```modelEoles.py```.\
 Plusieurs fonctions utilitaires (pour l'initialisation ou pour générer des graphiques) sont incluses dans le package ```utils.py```.\
-Pour utiliser le modèle, il suffit d'importer la classe ModelEOLES, d'en créer un instance à partir du fichier de configuration voulu, et d'utiliser les différentes méthodes pour construire et résoudre le modèle et extraire les résultats. Un fichier ```.py``` d'exemple est fourni.
-
+Un fichier ```.py``` d'exemple est fourni, et montre comment : importer la classe ModelEOLES, en créer un instance avec un fichier de configuration donné, et utiliser les différentes méthodes pour construire et résoudre le modèle et extraire les résultats.
 
 ---
 

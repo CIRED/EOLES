@@ -1,4 +1,6 @@
 import pandas as pd
+# /!\ The follwing two command lines only work if this file is in the same directory
+# as utils.py and modelEoles.py !!!
 from utils import get_config
 from modelEoles import ModelEOLES
 

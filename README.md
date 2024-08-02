@@ -10,9 +10,17 @@ Most of the model versions, as well as published articles using them, are presen
 
 ---
 
+#### **How to get the code :**
+
+If you don't have git installed on your computer, you can download the zip folder on Github (via the latest release) or Zenodo. \
+To get the latest build, you can retrieve the files from this Github through the command line : \
+```git clone https://github.com/CIRED/EOLES.git``` \
+A folder will be created in the current directory with all the files contained in this Github.
+
+
 #### **Installing the dependencies**
 
-The model requires some python packages as well as the Gurobi solver. 
+The model requires some python packages as well as the Gurobi solver.
 We provide both a requirements.txt and an environment.yml file for the packages dependencies, and a guide to getting an academic licence for Gurobi.
 
 * **Python** :
@@ -75,13 +83,6 @@ To use Gurobi on Inari :
 		```
 	Replacing ```user``` with your username
 
-#### **How to get the code :**
-
-If you don't have git installed on your computer, you can download the folder on Github or Zenodo. \
-Else, you can retrieve the files from this Github through the command line : \
-```git clone https://github.com/CIRED/EOLES.git``` \
-A folder will be created in the current directory with all the files contained in this GitLab.
-
 ---
 
 ### Using the model
@@ -90,7 +91,7 @@ A folder will be created in the current directory with all the files contained i
 
 The EOLES model is written as a class contained in the ```modelEoles.py``` package. \
 Several utility functions (initialization and plotting functions) that could be of interest to the user are in the ```utils.py``` package.\
-To use the model, import the ModelEOLES class, create an instance of the model with the desired configuration file then use the different methods to build and solve the model and to extract results. An example ```.py``` file is provided.
+An example ```.py``` file is provided, which shows how to do the following : import the ModelEOLES class, create an instance of the model with a given configuration file then use the different methods to build and solve the model and to extract results.\
 
 ---
 

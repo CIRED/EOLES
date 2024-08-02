@@ -906,9 +906,9 @@ class ModelEOLES():
             """Constraint on lake storage consistency."""
             hPOne = h + 1 if h < (self.last_hour) else 0
             # Spill is a mandatory production that does not go through storage but that is counted in gene, so it needs to be substracted from it here
-            outflow = model.gene['lake', h] - self.lake_spill.iat[h] \
-                        + model.frr['lake', h]*self.reserve_activation_rate.at["frr"] \
-                        + model.fcr['lake', h]*self.reserve_activation_rate.at["fcr"]
+            outflow = (model.gene['lake', h] - self.lake_spill.iat[h])/self.efficiency_storage_out.at["lake"] \
+                        + model.frr['lake', h]*self.reserve_activation_rate.at["frr"]/self.efficiency_storage_out.at["lake"] \
+                        + model.fcr['lake', h]*self.reserve_activation_rate.at["fcr"]/self.efficiency_storage_out.at["lake"]
             return model.lake_stored[hPOne] == model.lake_stored[h] + self.lake_inflows.iat[h] - outflow
 
         self.model.lake_storing_constraint = Constraint(self.model.h, rule=lake_storing_constraint_rule)

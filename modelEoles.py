@@ -89,7 +89,7 @@ class ModelEOLES():
         self.existing_charging_capacity = existing_charging_capacity # GW
         self.existing_energy_capacity = existing_energy_capacity # GWh
         self.existing_annualized_costs_elec = existing_annualized_costs_elec # 1e6€/GW/yr = €/kW/yr
-        self.existing_annualized_costs_CH4 = existing_annualized_costs_CH4 # 1e6€/GW/yr = €/kW/yr
+        self.existing_annualized_costs_CH4 = existing_annualized_costs_CH4 # 1e6/GW/yr = €/kW/yr
         self.existing_annualized_costs_H2 = existing_annualized_costs_H2 # 1e6€/GW/yr = €/kW/yr
 
 
@@ -173,7 +173,7 @@ class ModelEOLES():
         self.construction_time = read_constant(self.config["construction_time"]) # yr
         self.capex = read_constant(self.config["capex"], year_costs=self.year_costs) # 1e6€/GW = €/kW
         self.storage_capex = read_constant(self.config["storage_capex"], year_costs=self.year_costs) # 1e6€/GWh = €/kWh
-        self.phs_charge_to_discharge_ratio = self.config["phs_charge_to_discharge_ratio"]
+        self.phs_charge_to_discharge_capacity_ratio = self.config["phs_charge_to_discharge_capacity_ratio"]
 
         #We know that for an energy capacity of 3 TWh, we have a maximum charging capacity of 6.4 GW.
         self.h2_saltcavern_charge_to_storage_ratio = self.config["h2_saltcavern_charge_to_storage_ratio"] # GW/GWh
@@ -185,6 +185,7 @@ class ModelEOLES():
         self.efficiency_storage_in = read_constant(self.config["efficiency_storage_in"])
         self.efficiency_storage_out = read_constant(self.config["efficiency_storage_out"])
         self.conversion_efficiency = read_constant(self.config["conversion_efficiency"])
+        self.conversion_efficiency_biogas = read_constant(self.config["conversion_efficiency_biogas"])
         self.capacity_factor_nuclear_yearly = self.config["capacity_factor_nuclear_yearly"]
         self.ramp_rate = read_constant(self.config["ramp_rate"])
         self.load_shift_maximum_power = self.config["load_shift_maximum_power"]*self.elec_demand.sum()/self.nb_years # GW
@@ -254,7 +255,7 @@ class ModelEOLES():
         ### Technologies ###
 
         self.model.all_tech = Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
-                                                  "river", "lake", "nuclear", "methanization", "pyrogazification", "ocgt_coge",
+                                                  "river", "lake", "nuclear", "methanization", "methanization_coge", "methanization_injection", "pyrogazification", "ocgt_coge",
                                                   "natural_gas", "coal", "biomass_coge", "geothermal_coge", "waste", "marine", "rsv_dummy",
                                                  "ch4_ocgt", "ch4_ccgt", "h2_ccgt", "electrolysis", "methanation",
                                                  "phs", "battery_1h", "battery_4h", "h2_saltcavern", "ch4_reservoir", "str_dummy"])
@@ -272,7 +273,7 @@ class ModelEOLES():
         # Technologies participating in the electricity balance
         self.model.elec_balance = \
             Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
-                            "river", "lake", "nuclear", "phs",
+                            "river", "lake", "nuclear", "phs", "methanization_coge",
                             "battery_1h", "battery_4h", "ch4_ocgt", "ch4_ccgt", "h2_ccgt", "coal",
                            "biomass_coge", "geothermal_coge", "waste", "marine", "ocgt_coge",
                            "str_dummy"])
@@ -290,17 +291,20 @@ class ModelEOLES():
         self.model.CH4_primary_prod = Set(initialize=["methanization", "pyrogazification", "natural_gas"])
         self.model.CH4_prod = Set(initialize=["methanization", "pyrogazification", "methanation", "natural_gas"])
         self.model.H2_prod = Set(initialize=["electrolysis"])
+        self.model.biogas_prod = Set(initialize=["methanization"])
 
         # Technologies using each energy vector
         self.model.use_elec = Set(initialize=["phs", "battery_1h", "battery_4h", "electrolysis", "methanation", "str_dummy"])
         self.model.use_CH4 = Set(initialize=["ch4_reservoir", "ch4_ocgt", "ch4_ccgt", "ocgt_coge"])
         self.model.use_H2 = Set(initialize=["h2_saltcavern", "h2_ccgt"])
+        self.model.use_biogas = Set(initialize=["methanization_coge", "methanization_injection"])
 
         # Gas technologies used for balance (both CH4 and H2)
         self.model.CH4_balance = Set(
-            initialize=["methanization", "pyrogazification", "natural_gas", "methanation", "ch4_reservoir"])
+            initialize=["methanization_injection", "pyrogazification", "natural_gas", "methanation", "ch4_reservoir"])
         self.model.CH4_balance_biogas = Set(initialize=["methanization", "pyrogazification", "methanation"])
         self.model.H2_balance = Set(initialize=["electrolysis", "h2_saltcavern"])
+        self.model.biogas_balance = Set(initialize=["methanization"])
 
         # Conversion technologies
         self.model.conversion_tech = Set(initialize=["ch4_ocgt", "ch4_ccgt", "h2_ccgt", "electrolysis", "methanation", "ocgt_coge"])
@@ -308,6 +312,10 @@ class ModelEOLES():
         self.model.from_elec_to_H2 = Set(initialize=["electrolysis"])
         self.model.from_CH4_to_elec = Set(initialize=["ch4_ocgt", "ch4_ccgt"])
         self.model.from_H2_to_elec = Set(initialize=["h2_ccgt"])
+        self.model.from_biogas_to_elec = Set(initialize=["methanization_coge"])
+        self.model.from_biogas_to_CH4 = Set(initialize=["methanization_injection"])
+        self.model.from_elec_to_biogaz = Set(initialize=["methanization"])
+        
 
         # Storage technologies
         self.model.str = \
@@ -349,13 +357,13 @@ class ModelEOLES():
         self.model.str_output = \
             Var(((tech, h) for tech in self.model.str for h in self.model.h), within=NonNegativeReals, initialize=0)
         self.model.conv_output = \
-            Var(((tech, h) for tech in self.model.conversion_tech for h in self.model.h), within=NonNegativeReals, initialize=0)
+            Var(((tech, h) for tech in self.model.toute_conversion_tech for h in self.model.h), within=NonNegativeReals, initialize=0)
 
         # Installed capacity in GW
         self.model.nominal_power = \
             Var(self.model.prod_tech, within=NonNegativeReals, bounds=capacity_bounds)
         self.model.output_power = \
-            Var(self.model.conversion_tech, within=NonNegativeReals, bounds=capacity_bounds)
+            Var(self.model.toute_conversion_tech, within=NonNegativeReals, bounds=capacity_bounds)
         self.model.discharging_power = \
             Var(self.model.str, within=NonNegativeReals, bounds=capacity_bounds)
 
@@ -404,7 +412,7 @@ class ModelEOLES():
         for tech in self.model.prod_tech :
             if tech in self.fixed_installed_power.keys():
                 self.model.nominal_power[tech].fix(self.fixed_installed_power[tech])
-        for tech in self.model.conversion_tech :
+        for tech in self.model.toute_conversion_tech:
             if tech in self.fixed_installed_power.keys():
                 self.model.output_power[tech].fix(self.fixed_installed_power[tech])
         for tech in self.model.str :
@@ -433,7 +441,7 @@ class ModelEOLES():
             """Constraint on maximum power for non-VRE technologies."""
             if tech in model.prod_tech :
                 return model.nominal_power[tech] >= model.gene[tech, h]   # GW
-            if tech in model.conversion_tech :
+            if tech in model.toute_conversion_tech:
                 return model.output_power[tech] >= model.conv_output[tech, h]   # GW
             if tech in model.str :
                 return model.discharging_power[tech] >= model.str_output[tech, h]   # GW
@@ -463,7 +471,7 @@ class ModelEOLES():
             """Constraint on maximum generation including reserves"""
             if tech in model.prod_tech :
                 return model.nominal_power[tech] >= model.gene[tech, h] + model.fcr[tech, h] + model.frr[tech, h]   # GW
-            if tech in model.conversion_tech :
+            if tech in model.toute_conversion_tech:
                 return model.output_power[tech] >= model.conv_output[tech, h] + model.fcr[tech, h] + model.frr[tech, h]   # GW
             if tech in model.str :
                 return model.discharging_power[tech] >= model.str_output[tech, h] + model.fcr[tech, h] + model.frr[tech, h]   # GW
@@ -482,7 +490,7 @@ class ModelEOLES():
             """Constraint on some reserve-providing technologies that have a limited ramp-rate"""
             if tech in model.prod_tech:
                 return model.fcr[tech, h]*10 <= model.nominal_power[tech]*self.ramp_rate.at[tech]*self.reserve_activation_time.at["fcr"]*10
-            if tech in model.conversion_tech:
+            if tech in model.toute_conversion_tech:
                 return model.fcr[tech, h]*10 <= model.output_power[tech]*self.ramp_rate.at[tech]*self.reserve_activation_time.at["fcr"]*10
             if tech in model.str:
                 return model.fcr[tech, h]*10 <= model.discharging_power[tech]*self.ramp_rate.at[tech]*self.reserve_activation_time.at["fcr"]*10
@@ -503,7 +511,7 @@ class ModelEOLES():
             """Constraint on some reserve-providing technologies that have a limited ramp-rate"""
             if tech in model.prod_tech :
                 return model.frr[tech, h]*10 <= model.nominal_power[tech]*self.ramp_rate.at[tech]*self.reserve_activation_time.at["frr"]*10
-            if tech in model.conversion_tech :
+            if tech in model.toute_conversion_tech:
                 return model.frr[tech, h]*10 <= model.output_power[tech]*self.ramp_rate.at[tech]*self.reserve_activation_time.at["frr"]*10
             if tech in model.str :
                 return model.frr[tech, h]*10 <= model.discharging_power[tech]*self.ramp_rate.at[tech]*self.reserve_activation_time.at["frr"]*10
@@ -515,9 +523,12 @@ class ModelEOLES():
             """Constraint for supply/demand electricity relation'"""
             storage = sum(model.str_input[str, h] for str in model.str_elec)  # GW
             gene_from_elec = model.conv_output['electrolysis', h] / self.conversion_efficiency.at['electrolysis'] \
-                        + model.conv_output['methanation', h] / self.conversion_efficiency.at['methanation']  # GW
+                            + model.conv_output['methanation', h] / self.conversion_efficiency.at['methanation'] \
+                            + model.conv_output['methanization_coge', h] / self.conversion_efficiency.at['methanization_coge'] \
+                            + model.conv_output['methanization_injection',h] / self.conversion_efficiency.at['methanization_injection'] \
+                            + model.conv_output['methanization',h] / self.conversion_efficiency.at['methanization']  # GW
             prod_elec = sum(model.gene[tech, h] for tech in (model.prod_tech & model.elec_balance))\
-                            + sum(model.conv_output[tech, h] for tech in (model.conversion_tech & model.elec_balance))\
+                            + sum(model.conv_output[tech, h] for tech in (model.toute_conversion_tech & model.elec_balance))\
                             + sum(model.str_output[tech, h] for tech in (model.str & model.elec_balance))      # GW
             net_load_shift_up = model.dsm_up[h] - sum(model.dsm_down[hh, h] for hh in shift_range(h, self.load_shift_period, self.last_hour))
             return prod_elec >= (self.elec_demand.iat[h] + storage + gene_from_elec + net_load_shift_up)
@@ -568,6 +579,7 @@ class ModelEOLES():
         ###########
         ### VRE ###
         ###########
+
 
         def generation_vre_constraint_rule(model, h, tech):
             """Constraint on variables renewable profiles generation."""
@@ -689,11 +701,24 @@ class ModelEOLES():
 
         def methanization_constraint_rule(model, y):
             """Constraint on methanization. The annual power production from methanization is limited to a certain amount."""
-            gene_biogas = sum(model.gene['methanization', hour] for hour in range(8760*y,8760*(y+1)))
+            gene_biogas = sum(model.conv_output['methanization', hour] for hour in range(8760*y,8760*(y+1)))
             return gene_biogas/1000 <= self.biomass_potential.at["methanization"]  # max biogas yearly energy is expressed in TWh
 
         self.model.biogas_constraint = Constraint(self.model.years, rule=methanization_constraint_rule)
 
+        def methanization_coge_constraint_rule(model, y):
+            """Constraint on methanization_coge. The annual power production from methanization is limited to a certain amount."""
+            gene_elec_methanization_coge = sum(model.conv_output['methanization_coge', hour] for hour in range(8760*y,8760*(y+1)))
+            return gene_elec_methanization_coge/1000 <= self.biomass_potential.at["methanization_coge"]  # max biogas yearly energy is expressed in TWh
+
+        self.model.elec_methanization_coge_constraint = Constraint(self.model.years, rule=methanization_coge_constraint_rule)
+
+        def methanization_injection_constraint_rule(model, y):
+            """Constraint on methanization_injection. The annual power production from methanization is limited to a certain amount."""
+            gene_elec_methanization_injection = sum(model.conv_output['methanization_injection', hour] for hour in range(8760*y,8760*(y+1)))
+            return gene_elec_methanization_injection/1000 <= self.biomass_potential.at["methanization_injection"]  # max biogas yearly energy is expressed in TWh
+
+        self.model.methanization_injection_constraint = Constraint(self.model.years, rule=methanization_injection_constraint_rule)
 
         def pyrogazification_constraint_rule(model, y):
             """Constraint on pyrogazification. The annual power production from pyro is limited to a certain amount."""
@@ -706,7 +731,7 @@ class ModelEOLES():
         def methanation_CO2_constraint_rule(model, y):
             """Constraint on CO2 balance from methanization, summing over all hours of the year"""
             return sum(model.conv_output['methanation', h] for h in range(8760*y,8760*(y+1))) / self.conversion_efficiency.at['methanation'] / 100 <= (
-                sum(model.gene['methanization', h] for h in range(8760*y,8760*(y+1))) * self.CO2_fraction.at["methanization"] / (1 - self.CO2_fraction.at["methanization"]) * self.CO2_usable.at["methanization"]
+                sum(model.conv_output['methanization_injection', h] for h in range(8760*y,8760*(y+1))) * self.CO2_fraction.at["methanization_injection"] / (1 - self.CO2_fraction.at["methanization_injection"]) * self.CO2_usable.at["methanization_injection"]
                 + sum(model.gene['pyrogazification', h] for h in range(8760*y,8760*(y+1))) * self.CO2_fraction.at["pyrogazification"] / (1 - self.CO2_fraction.at["pyrogazification"]) * self.CO2_usable.at["pyrogazification"]
                 + self.CO2_industry_prod*self.CO2_usable.at["industry"] - self.CO2_industry_demand)/100
         # if x is the molar fraction of CO2 then x/(1-x) is the number of moles of CO2 per mole of CH4 (considering the output gas is a mix of only those two gases)
@@ -719,7 +744,7 @@ class ModelEOLES():
             """Constraint on methane's balance. Methane production must satisfy ch4_ccgt, ch4_ocgt and ocgt_coge plants' CH4 demand."""
 
             supply_h = sum(model.gene[tech, h] for tech in (model.prod_tech & model.CH4_balance))\
-                            + sum(model.conv_output[tech, h] for tech in (model.conversion_tech & model.CH4_balance))\
+                            + sum(model.conv_output[tech, h] for tech in (model.toute_conversion_tech & model.CH4_balance))\
                             + sum(model.str_output[tech, h] for tech in (model.str & model.CH4_balance))      # GW
 
             usage_h = 0
@@ -743,7 +768,7 @@ class ModelEOLES():
             """Constraint on satisfying annual demand for methane"""
 
             supply_tot = sum(sum(model.gene[tech, h] for tech in (model.prod_tech & model.CH4_balance))\
-                            + sum(model.conv_output[tech, h] for tech in (model.conversion_tech & model.CH4_balance))\
+                            + sum(model.conv_output[tech, h] for tech in ((model.toute_conversion_tech) & model.CH4_balance))\
                             + sum(model.str_output[tech, h] for tech in (model.str & model.CH4_balance))
                         for h in range(8760*y,8760*(y+1)))
 
@@ -762,6 +787,53 @@ class ModelEOLES():
 
         if not self.CH4_demand_is_profile:
             self.model.methane_annual_demand_constraint = Constraint(self.model.years, rule=methane_annual_demand_constraint_rule)
+        
+        def biogas_balance_constraint_rule(model, h):
+            """Constraint on biogas' balance. Biogas production by methanization must satisfy methanization_coge and methanization_injection demand."""
+
+            supply_h = sum(model.gene[tech, h] for tech in (model.prod_tech & model.biogas_balance))\
+                            + sum(model.conv_output[tech, h] for tech in (model.toute_conversion_tech & model.biogas_balance))\
+                            + sum(model.str_output[tech, h] for tech in (model.str & model.biogas_balance))      # GW
+
+            usage_h = 0
+            for tech in model.use_biogas:
+                if tech in model.str:
+                    usage_h += model.str_input[tech, h]   # GW
+                if tech in model.double_conversion_tech:
+                    usage_h += model.conv_output[tech, h]/self.conversion_efficiency_biogas.at[tech]   # GW
+                if tech in model.reserve:
+                    usage_h += model.frr[tech, h]/self.conversion_efficiency.at[tech]*self.reserve_activation_rate.at["frr"]
+                    usage_h += model.fcr[tech, h]/self.conversion_efficiency.at[tech]*self.reserve_activation_rate.at["fcr"]
+           ## if self.biogas_demand_is_profile:
+             #  usage_h += self.CH4_demand.iat[h] # GWh
+
+            return supply_h >= usage_h   # GW
+
+        self.model.biogas_balance_constraint = Constraint(self.model.h, rule=biogas_balance_constraint_rule)
+
+        def biogas_annual_demand_constraint_rule(model, y):
+            """Constraint on satisfying annual demand for biogas"""
+
+            supply_tot = sum(sum(model.gene[tech, h] for tech in (model.prod_tech & model.biogas_balance))\
+                            + sum(model.conv_output[tech, h] for tech in (model.conversion_tech & model.biogas_balance))\
+                            + sum(model.str_output[tech, h] for tech in (model.str & model.biogas_balance))
+                        for h in range(8760*y,8760*(y+1)))
+
+            usage_tot = 0
+            for tech in model.use_biogas:
+                if tech in model.str:
+                    usage_tot += sum(model.str_input[tech, h] for h in range(8760*y,8760*(y+1)))   # GW
+                if tech in model.double_conversion_tech:
+                    usage_tot += sum(model.conv_output[tech, h]/self.conversion_efficiency_biogas.at[tech] for h in range(8760*y,8760*(y+1)))   # GW
+                if tech in model.reserve:
+                    usage_tot += sum(model.frr[tech, h]/self.conversion_efficiency.at[tech]*self.reserve_activation_rate.at["frr"] for h in range(8760*y,8760*(y+1)))
+                    usage_tot += sum(model.fcr[tech, h]/self.conversion_efficiency.at[tech]*self.reserve_activation_rate.at["fcr"] for h in range(8760*y,8760*(y+1)))
+            # usage_tot += self.CH4_demand
+
+            return supply_tot/100 >= usage_tot/100
+
+       # if not self.CH4_demand_is_profile:
+        self.model.biogas_annual_demand_constraint = Constraint(self.model.years, rule=biogas_annual_demand_constraint_rule)
 
 
         ################
@@ -887,7 +959,7 @@ class ModelEOLES():
             should be lower than the discharging capacity. We impose here something slightly more constraining for PHS. The value
             is based on data from annex in RTE (p.898), where we calculate the ratio between the projected charging and
             discharging capacity."""
-            return model.charging_power['phs'] <= model.discharging_power['phs'] * self.phs_charge_to_discharge_ratio
+            return model.charging_power['phs'] <= model.discharging_power['phs'] * self.phs_charge_to_discharge_capacity_ratio
 
         self.model.phs_charging_constraint = Constraint(rule=phs_charging_constraint_rule)
 
@@ -947,7 +1019,7 @@ class ModelEOLES():
             return (
                 # power annuities
                 (sum((model.nominal_power[tech] - self.existing_capacity.at[tech]) * self.annuities.at[tech] for tech in model.prod_tech)
-                    + sum((model.output_power[tech] - self.existing_capacity.at[tech]) * self.annuities.at[tech] for tech in model.conversion_tech)
+                    + sum((model.output_power[tech] - self.existing_capacity.at[tech]) * self.annuities.at[tech] for tech in (model.toute_conversion_tech))
                     + sum((model.discharging_power[tech] - self.existing_capacity.at[tech]) * self.annuities.at[tech] for tech in model.str)
                 )*self.nb_years   # 1e6€
 
@@ -957,14 +1029,14 @@ class ModelEOLES():
 
                 # fixed O&M
                 + (sum(model.nominal_power[tech] * self.fOM.at[tech] for tech in model.prod_tech)
-                    + sum(model.output_power[tech] * self.fOM.at[tech] for tech in model.conversion_tech)
+                    + sum(model.output_power[tech] * self.fOM.at[tech] for tech in (model.toute_conversion_tech))
                     + sum(model.discharging_power[tech] * self.fOM.at[tech] for tech in model.str)
                 )*self.nb_years   # 1e6€
 
 
                 # variable O&M
                 + sum(sum(model.gene[tech, h] * self.vOM.at[tech] for tech in model.prod_tech)
-                      + sum(model.conv_output[tech, h] * self.vOM.at[tech] for tech in model.conversion_tech)
+                      + sum(model.conv_output[tech, h] * self.vOM.at[tech] for tech in (model.toute_conversion_tech))
                       + sum(model.str_output[tech, h] * self.vOM.at[tech] for tech in model.str)
                     for h in model.h)   # 1e6€
 
@@ -1032,7 +1104,7 @@ class ModelEOLES():
             self.system_technical_cost, self.emissions = get_technical_cost(self.model, self.system_social_cost, self.scc,
                                                                  self.nb_years, self.carbon_content)   # 1e9€/yr , MtCO2/yr
 
-        self.hourly_balance = extract_hourly_balance(self.model, self.elec_demand, self.H2_demand, self.CH4_demand, self.conversion_efficiency, self.efficiency_storage_in, self.efficiency_storage_out,
+        self.hourly_balance = extract_hourly_balance(self.model, self.elec_demand, self.H2_demand, self.CH4_demand, self.conversion_efficiency, self.conversion_efficiency_biogas, self.efficiency_storage_in, self.efficiency_storage_out,
                                                           self.load_shift_period, self.last_hour)   # GW
         _ = extract_curtailment(self.model, self.conversion_efficiency, self.hourly_balance)
         self.frr = pd.Series({tech : self.hourly_balance.loc[:, tech+"_frr"].sum()/1000 for tech in self.model.reserve})   # TWh
@@ -1042,9 +1114,9 @@ class ModelEOLES():
         self.spot_price = extract_spot_price(self.model, nb_hours=self.last_hour + 1)   # €/MW(h)
         self.carbon_value = extract_carbon_value(self.model, self.carbon_constraint, self.scc)   # €/tCO2
         self.installed_power = pd.Series([value(self.model.nominal_power[tech]) for tech in self.model.prod_tech]
-                                  + [value(self.model.output_power[tech]) for tech in self.model.conversion_tech]
+                                  + [value(self.model.output_power[tech]) for tech in (self.model.toute_conversion_tech)]
                                   + [value(self.model.discharging_power[tech]) for tech in self.model.str],
-                            index=self.model.prod_tech | self.model.conversion_tech | self.model.str, dtype=float)   # GW
+                            index=self.model.prod_tech | self.model.toute_conversion_tech | self.model.str, dtype=float)   # GW
         self.energy_capacity = pd.Series([value(self.model.energy_capacity[tech]) for tech in self.model.str], index=self.model.str,dtype=float)   # GWh
         self.charging_power = pd.Series([value(self.model.charging_power[tech]) for tech in self.model.str], index=self.model.str,dtype=float)   # GW
         self.primary_generation = extract_primary_gene(self.model, self.nb_years, self.hourly_balance)   # TWh

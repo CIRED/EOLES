@@ -294,7 +294,7 @@ def extract_carbon_footprint(model, gene_per_tech, carbon_footprint, nb_years): 
     return footprint
 
 
-def extract_hourly_balance(model, elec_demand, H2_demand, CH4_demand, conversion_efficiency, eta_in, eta_out, load_shift_period, last_hour):
+def extract_hourly_balance(model, elec_demand, H2_demand, CH4_demand, conversion_efficiency, conversion_efficiency_biogas, eta_in, eta_out, load_shift_period, last_hour):
     """Extracts hourly defined data, including demand, generation and storage
     Returns a dataframe with hourly generation for each hour.
     Using this function, you limit the number of times model output values are extracted, which is costly in computational power.
@@ -313,7 +313,7 @@ def extract_hourly_balance(model, elec_demand, H2_demand, CH4_demand, conversion
         hourly_balance.iloc[h, hourly_balance.columns.get_loc("demand_on_hold")] = hourly_balance.iloc[h-1, hourly_balance.columns.get_loc("demand_on_hold")] + hourly_balance.iloc[h, hourly_balance.columns.get_loc("load_shift_down")] - hourly_balance.iloc[h, hourly_balance.columns.get_loc("load_shift_up")]
     for tech in model.prod_tech:
         hourly_balance.loc[:, tech] = value(model.gene[tech, :]) # GW
-    for tech in model.conversion_tech:
+    for tech in model.toute_conversion_tech:
         hourly_balance.loc[:, tech] = value(model.conv_output[tech, :]) # GW
     for tech in model.str:
         hourly_balance.loc[:, tech] = value(model.str_output[tech, :]) # GW
@@ -323,6 +323,9 @@ def extract_hourly_balance(model, elec_demand, H2_demand, CH4_demand, conversion
     # We add technologies which include a conversion parameter, to express their hourly generation in GWh of the input vector
     for tech in model.conversion_tech:
         hourly_balance.loc[:, tech + "_input"] = value(model.conv_output[tech, :]) / conversion_efficiency.at[tech]
+    for tech in model.double_conversion_tech:
+        hourly_balance.loc[:, tech + "_input"] = value(model.conv_output[tech, :]) / conversion_efficiency.at[tech]
+        hourly_balance.loc[:, tech + "_input2"] = value(model.conv_output[tech, :]) / conversion_efficiency_biogas.at[tech]
     for tech in model.str:
         hourly_balance.loc[:, tech + "_input"] = value(model.str_input[tech, :])  # GW
         hourly_balance.loc[:, tech + "_state_charge"] = value(model.state_of_charge[tech, :])  # GW
@@ -463,7 +466,7 @@ def extract_power_to_CH4(model, conversion_efficiency, nb_years, hourly_balance)
     """Extracts electricity generation necessary to produce CH4 in TWh"""
     power_to_CH4_input = pd.Series(dtype=float)
 
-    for tech in model.from_elec_to_CH4:
+    for tech in model.from_elec_to_CH4 | model.from_biogas_to_CH4:
         power_to_CH4_input[tech] = hourly_balance.loc[:, tech+"_input"].sum() / 1000 / nb_years  # TWh
     return power_to_CH4_input
 
@@ -612,7 +615,7 @@ def calculate_lcoe_per_tech(model, hourly_balance, annuities, storage_annuities,
     model all plants are aggregated."""
 
     lcoe = pd.DataFrame(columns=["lcoe [€/MWh]", "lcoe without input [€/MWh]"], dtype=object)
-    for tech in (model.prod_tech | model.conversion_tech | model.str):
+    for tech in (model.prod_tech | model.conversion_tech | model.double_conversion_tech | model.str):
 
         if capacity.at[tech] != 0:
             gene_new_installation = gene_per_tech.at[tech]*(capacity.at[tech] - existing_capacity.at[tech])/capacity.at[tech]
@@ -623,7 +626,7 @@ def calculate_lcoe_per_tech(model, hourly_balance, annuities, storage_annuities,
             if tech in model.str:
                 cost_without_input += (energy_capacity.at[tech] - existing_energy_capacity.at[tech])*storage_annuities.at[tech]*nb_years
 
-            if tech in model.conversion_tech or tech in model.str:
+            if tech in model.conversion_tech or tech in model.str or tech in model.double_conversion_tech:
                 # /!\ spot_prices are in 1e3€/GWh
                 if tech in model.use_elec:
                     cost = cost_without_input + (hourly_balance.loc[:, tech+"_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]).sum()/1e3   # 1e6€
@@ -721,6 +724,15 @@ def compute_costs(model, annuities, fOM, vOM, storage_annuities, gene_per_tech, 
             if tech in model.str:
                 costs_H2 += (energy_capacity.at[tech] - existing_energy_capacity.at[tech])*storage_annuities.at[tech]*nb_years
 
+    costs_biogas = 0 # 1e6€
+    for tech in model.biogas_balance:
+        if capacity.at[tech] != 0:
+            gene_new_installation = gene_per_tech.at[tech]*(capacity.at[tech] - existing_capacity.at[tech])/capacity.at[tech]
+            # /!\ gene is in TWh
+            costs_H2 += (capacity.at[tech] - existing_capacity.at[tech])*(annuities.at[tech] + fOM.at[tech])*nb_years + gene_new_installation*1000*vOM.at[tech]
+            if tech in model.str:
+                costs_H2 += (energy_capacity.at[tech] - existing_energy_capacity.at[tech])*storage_annuities.at[tech]*nb_years
+
     return costs_elec, costs_CH4, costs_H2
 
 
@@ -791,6 +803,9 @@ def compute_lcoe_value(model, hourly_balance, costs_elec, costs_CH4, costs_H2, e
     gene_from_elec_to_H2_value = sum(
         (hourly_balance.loc[:, tech+"_input"].reset_index(drop=True)*spot_price.loc[:, "CH4"]).sum()
         for tech in model.from_elec_to_H2)
+    gene_from_elec_to_biogas = sum(
+        (hourly_balance.loc[:, tech+"_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]).sum()
+        for tech in model.from_biogas_to_elec | model.from_biogas_to_CH4)
     elec_demand_tot_value = (elec_demand.reset_index(drop=True)*spot_price.loc[:, "elec"]).sum()
     CH4_demand_tot_value = (CH4_demand.reset_index(drop=True)*spot_price.loc[:, "CH4"]).sum()
     H2_demand_tot_value = (H2_demand.reset_index(drop=True)*spot_price.loc[:, "H2"]).sum()
@@ -805,11 +820,13 @@ def compute_lcoe_value(model, hourly_balance, costs_elec, costs_CH4, costs_H2, e
     costs_H2_to_elec_value = costs_H2 * gene_from_H2_to_elec_value / (
             H2_demand_tot_value + gene_from_H2_to_elec_value)
     costs_elec_to_demand_value = costs_elec * elec_demand_tot_value / (
-            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value)
+            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value + gene_from_elec_to_biogas)
     costs_elec_to_CH4_value = costs_elec * gene_from_elec_to_CH4_value / (
-            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value)
+            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value + gene_from_elec_to_biogas)
     costs_elec_to_H2_value = costs_elec * gene_from_elec_to_H2_value / (
-            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value)
+            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value + gene_from_elec_to_biogas)
+    costs_elec_to_biogas_value = costs_elec * gene_from_elec_to_biogas / (
+            elec_demand_tot_value + gene_from_elec_to_H2_value + gene_from_elec_to_CH4_value + gene_from_elec_to_biogas)
 
     if elec_demand_tot != 0 :
         lcoe_elec_value = (costs_CH4_to_elec_value + costs_H2_to_elec_value + costs_elec_to_demand_value) / elec_demand_tot  # € / MWh
@@ -849,6 +866,8 @@ def extract_profit(model, hourly_balance, spot_price, vOM, new_annuities, new_st
             profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "CH4"]/1000).sum()   # 1e6€/yr
         if tech in model.from_H2_to_elec:
             profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "H2"]/1000).sum()   # 1e6€/yr
+        if tech in model.from_biogas_to_elec:
+            profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]/1000).sum()   # 1e6€/yr
         if tech in model.reserve:
             profits.at[tech] += (hourly_balance.loc[:, tech+"_frr"].reset_index(drop=True)*spot_price.loc[:, "frr"]/1000).sum()   # 1e6€/yr
             profits.at[tech] += - (hourly_balance.loc[:, tech+"_frr"].reset_index(drop=True)*reserve_activation_rate.at["frr"]*vOM.at[tech]).sum()   # 1e6€/yr
@@ -869,6 +888,8 @@ def extract_profit(model, hourly_balance, spot_price, vOM, new_annuities, new_st
             profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "CH4"]/1000).sum() - new_str_annuities.at[tech]   # 1e6€/yr
         if tech in model.from_elec_to_CH4:
             profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]/1000).sum()   # 1e6€/yr
+        if tech in model.from_biogas_to_CH4:
+            profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]/1000).sum()   # 1e6€/yr
 
     for tech in model.H2_balance:
         profits.at[tech] = (hourly_balance.loc[:, tech].reset_index(drop=True)*(spot_price.loc[:, "H2"]/1000 - vOM[tech])).sum() - new_annuities.at[tech]   # 1e6€/yr
@@ -877,6 +898,10 @@ def extract_profit(model, hourly_balance, spot_price, vOM, new_annuities, new_st
         if tech in model.from_elec_to_H2:
             profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]/1000).sum()   # 1e6€/yr
 
+    for tech in model.biogas_balance:
+        profits.at[tech] = (hourly_balance.loc[:, tech].reset_index(drop=True)*(spot_price.loc[:, "elec"]/1000 - vOM[tech])).sum() - new_annuities.at[tech]   # 1e6€/yr
+        if tech in model.from_elec_to_biogaz:
+            profits.at[tech] += -(hourly_balance.loc[:, tech + "_input"].reset_index(drop=True)*spot_price.loc[:, "elec"]/1000).sum()   # 1e6€/yr
 
     profits.loc[np.isclose(profits, 0)] = 0
     return profits
@@ -982,7 +1007,7 @@ def extract_summary(objective, model, elec_demand, H2_demand, H2_demand_is_profi
     G2P_H2_bought = (spot_price.loc[:, "H2"] * sum(hourly_balance.loc[:, tech+"_input"] for tech in model.from_H2_to_elec).reset_index(drop=True)).sum() / 1e3
     G2P_bought = G2P_CH4_bought + G2P_H2_bought
 
-    P2G_CH4_bought = (spot_price.loc[:, "elec"] * sum(hourly_balance.loc[:, tech+"_input"] for tech in model.from_elec_to_CH4).reset_index(drop=True)).sum() / 1e3
+    P2G_CH4_bought = (spot_price.loc[:, "elec"] * sum(hourly_balance.loc[:, tech+"_input"] for tech in model.from_elec_to_CH4 | model.from_biogas_to_CH4).reset_index(drop=True)).sum() / 1e3
     P2G_H2_bought = (spot_price.loc[:, "elec"] * sum(hourly_balance.loc[:, tech+"_input"] for tech in model.from_elec_to_H2).reset_index(drop=True)).sum() / 1e3
 
 
@@ -1152,7 +1177,8 @@ def plot_elec_balance_week(model, hourly_balance, installed_power, hour, include
         elec_prod["Cogeneration"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("biomass_coge")] \
                                         + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("geothermal_coge")] \
                                         + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("waste")] \
-                                        + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("ocgt_coge")]
+                                        + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("ocgt_coge")] \
+                                        + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanization_coge")]
         elec_prod["Hydropower - Other"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("river")] + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("marine")]
         elec_prod["Wind - onshore"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("onshore")]
         elec_prod["Wind - offshore"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("offshore_ground")] + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("offshore_float")]
@@ -1171,7 +1197,8 @@ def plot_elec_balance_week(model, hourly_balance, installed_power, hour, include
         elec_prod["Cogénération"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("biomass_coge")] \
                                         + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("geothermal_coge")] \
                                         + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("waste")] \
-                                        + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("ocgt_coge")]
+                                        + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("ocgt_coge")]\
+                                        + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanization_coge")] 
         elec_prod["Hydraulique - Autres"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("river")] + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("marine")]
         elec_prod["Eolien - Terrestre"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("onshore")]
         elec_prod["Eolien - En mer"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("offshore_ground")] + hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("offshore_float")]
@@ -1205,14 +1232,16 @@ def plot_elec_balance_week(model, hourly_balance, installed_power, hour, include
             elec_str.loc[:, "Methanation"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanation_input")]
             elec_str.loc[:, "Electrolysis"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("electrolysis_input")]
             elec_str.loc[:, "Missing storage"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("str_dummy_input")]
+            elec_str.loc[:, "Methanization"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanization_input")]
         if lang == "FR":
             elec_str.loc[:, "STEP"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("phs_input")]
             elec_str.loc[:, "Batteries"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("battery_1h_input")] + -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("battery_4h_input")]
             elec_str.loc[:, "Méthanation"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanation_input")]
             elec_str.loc[:, "Electrolyse"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("electrolysis_input")]
             elec_str.loc[:, "Stockage manquant"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("str_dummy_input")]
+            elec_str.loc[:, "Méthanisation"] = -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanization_input")]
 
-        colors_str = ["#0e4269", "#80549f", "#f20809", "#f252c0", "#757575"]
+        colors_str = ["#0e4269", "#80549f", "#f20809", "#f252c0", "#757575", "#e4a701"]
 
         handles_str = ax.stackplot(time, elec_str.T, labels=elec_str.columns, colors=colors_str)
     else:
@@ -1290,6 +1319,7 @@ def plot_elec_residual_balance_week(model, hourly_balance, installed_power, hour
         operable_prod.loc[:, "CH4 turbines"] = sum(hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc(tech)] for tech in model.from_CH4_to_elec)
         operable_prod.loc[:, "H2 turbines"] = sum(hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc(tech)] for tech in model.from_H2_to_elec)
         operable_prod.loc[:, "Missing storage"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("str_dummy")]
+        operable_prod.loc[:, "Cogeneration by methanization"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanization_coge")]
     if lang == "FR":
         operable_prod.loc[:, "Hydraulique - Barrages"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("lake")]
         if installed_power.at["nuclear"] > 0 :
@@ -1301,6 +1331,8 @@ def plot_elec_residual_balance_week(model, hourly_balance, installed_power, hour
         operable_prod.loc[:, "Turbines CH4"] = sum(hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc(tech)] for tech in model.from_CH4_to_elec)
         operable_prod.loc[:, "Turbines H2"] = sum(hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc(tech)] for tech in model.from_H2_to_elec)
         operable_prod.loc[:, "Stockage manquant"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("str_dummy")]
+        operable_prod.loc[:, "Cogénération avec méthaniseurs"] = hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("methanization_coge")]
+
 
     colors_prod=["#2672b0"]
     if installed_power.at["nuclear"] > 0 :
@@ -1513,7 +1545,8 @@ def plot_gene_per_tech(*args):
         prod_per_tech_to_plot.at["Cogeneration"] =  prod_per_tech.at["biomass_coge"] \
                                     + prod_per_tech.at["geothermal_coge"] \
                                     + prod_per_tech.at["waste"] \
-                                    + prod_per_tech.at["ocgt_coge"]
+                                    + prod_per_tech.at["ocgt_coge"] \
+                                    + prod_per_tech.at["methanization_coge"]
         prod_per_tech_to_plot.at["Hydropower - Other"] = prod_per_tech.at["river"] + prod_per_tech.at["marine"]
         prod_per_tech_to_plot.at["Wind - onshore"] = prod_per_tech.at["onshore"]
         prod_per_tech_to_plot.at["Wind - offshore"] = prod_per_tech.at["offshore_ground"] + prod_per_tech.at["offshore_float"]
@@ -1576,6 +1609,8 @@ def compare_operable_mix(names, results, lang="EN"):
         bottom += [result.at["str_dummy", "Installed power [GW]"] for result in results]
         ax.bar(names, [result.at["rsv_dummy", "Installed power [GW]"] for result in results], width=0.5, label="Missing reserves", bottom=bottom, color="#3d3d3d")
         bottom += [result.at["rsv_dummy", "Installed power [GW]"] for result in results]
+        ax.bar(names, [result.at["methanization_cogeneration", "Installed power [GW]"] for result in results], width=0.5, label="Cogeneration by methanization", bottom=bottom, color="#e4a701")
+        bottom += [result.at["methanization_coge", "Installed power [GW]"] for result in results]
         ax.bar(names, bottom/5, bottom=bottom, alpha=0) # margin
 
         ax.set_ylabel("Installed power [GW]", fontsize=12)
@@ -1604,6 +1639,8 @@ def compare_operable_mix(names, results, lang="EN"):
         bottom += [result.at["str_dummy", "Installed power [GW]"] for result in results]
         ax.bar(names, [result.at["rsv_dummy", "Installed power [GW]"] for result in results], width=0.5, label="Réserves manquantes", bottom=bottom, color="#3d3d3d")
         bottom += [result.at["rsv_dummy", "Installed power [GW]"] for result in results]
+        ax.bar(names, [result.at["methanization_cogeneration", "Installed power [GW]"] for result in results], width=0.5, label="Cogénération par méthanisation", bottom=bottom, color="#e4a701")
+        bottom += [result.at["methanization_coge", "Installed power [GW]"] for result in results]
         ax.bar(names, bottom/5, bottom=bottom, alpha=0) # margin
 
         ax.set_ylabel("Puissance installée [GW]", fontsize=12)

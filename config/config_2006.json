@@ -53,7 +53,7 @@
   "maximum_energy_capacity": "inputs/potentials/maximum_energy_capacity.csv",
   "nb_optimisation_years": 1,
   "phs_inflows": "inputs/production profiles/lake inflows and constraints/phs_inflows_2006.csv",
-  "phs_charge_to_discharge_ratio": 0.92,
+  "phs_charge_to_discharge_capacity_ratio": 0.92,
   "prediction_transport_and_distrib_annuity": "inputs/costs/prediction_transport_and_distrib_annuity.csv",
   "prediction_transport_offshore": "inputs/costs/prediction_transport_offshore_annuity.csv",
   "prod_profile_offshore_float": "inputs/production profiles/offshore float/offshore_f_profile_2006.csv",

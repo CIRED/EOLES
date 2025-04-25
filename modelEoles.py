@@ -556,7 +556,7 @@ class ModelEOLES():
             """Constraint for limiting simultaneous upwards and downwards load shift
             For all information concerning load shifting modelisation, see Zerrahn et al.
             "On the representation of demand-side management in power system models" (2015)"""
-            return model.dsm_up[h]*100 + sum(model.dsm_down[hh, h] for hh in shift_range(h, self.load_shift_period, self.last_hour))*1000 <= self.load_shift_maximum_power*1000
+            return model.dsm_up[h]*1000 + sum(model.dsm_down[hh, h] for hh in shift_range(h, self.load_shift_period, self.last_hour))*1000 <= self.load_shift_maximum_power*1000
 
         self.model.shifting_simultaneous_limit_constraint = Constraint(self.model.h, rule=shifting_simultaneous_limit_constraint_rule)
 

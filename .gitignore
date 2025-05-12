@@ -1,6 +1,6 @@
-inputs/
 outputs/
 config/
 __pycache__/
 envEOLES/
-.ipynb_checkpoints/
+.virtual-env-juliette
+.DS_Store

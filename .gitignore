@@ -3,3 +3,8 @@ outputs/
 config/
 __pycache__/
 envEOLES/
+.ipynb_checkpoints/
+eval_nW_2000to2018.py 
+eval_nW_2000to2018_opti.py 
+eval_nW_2000to2018_alternatives.py 
+eval_nW_2000to2018_sensiCH4.py 

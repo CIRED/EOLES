@@ -12,4 +12,4 @@ example.extract_optimisation_results()
 
 example.summary.to_csv("outputs/summary.csv")
 example.results.to_csv("outputs/results.csv")
-example.hourly_balance.to_csv("outputs/hourly_generation.csv")
+example.hourly_balance.to_csv("outputs/hourly_balance.csv")

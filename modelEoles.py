@@ -261,7 +261,7 @@ class ModelEOLES():
 
         # Primary production
         self.model.prod_tech = Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
-                                                  "river", "lake", "nuclear", "methanization", "pyrogazification", "ocgt_coge",
+                                                  "river", "lake", "nuclear", "methanization", "pyrogazification",
                                                   "natural_gas", "coal", "biomass_coge", "geothermal_coge", "waste", "marine", "rsv_dummy"])
 
         # Non_operable Technologies
@@ -283,13 +283,13 @@ class ModelEOLES():
 
         # Technologies producing each of the primary energy (ie excluding conversion and storage technologies)
         self.model.elec_prod = Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
-                                               "river", "lake", "nuclear", "coal", "biomass_coge", "geothermal_coge", "waste", "marine", "ocgt_coge"])
+                                               "river", "lake", "nuclear", "coal", "biomass_coge", "geothermal_coge", "waste", "marine"])
         self.model.CH4_prod = Set(initialize=["methanization", "pyrogazification", "methanation", "natural_gas"])
         self.model.H2_prod = Set(initialize=["electrolysis"])
 
         # Technologies using each energy vector
         self.model.use_elec = Set(initialize=["phs", "battery_1h", "battery_4h", "electrolysis", "methanation", "str_dummy"])
-        self.model.use_CH4 = Set(initialize=["ch4_reservoir", "ch4_ocgt", "ch4_ccgt"])
+        self.model.use_CH4 = Set(initialize=["ch4_reservoir", "ch4_ocgt", "ch4_ccgt", "ocgt_coge"])
         self.model.use_H2 = Set(initialize=["h2_saltcavern", "h2_ccgt"])
 
         # Gas technologies used for balance (both CH4 and H2)
@@ -299,7 +299,7 @@ class ModelEOLES():
         self.model.H2_balance = Set(initialize=["electrolysis", "h2_saltcavern"])
 
         # Conversion technologies
-        self.model.conversion_tech = Set(initialize=["ch4_ocgt", "ch4_ccgt", "h2_ccgt", "electrolysis", "methanation"])
+        self.model.conversion_tech = Set(initialize=["ch4_ocgt", "ch4_ccgt", "h2_ccgt", "electrolysis", "methanation", "ocgt_coge"])
         self.model.from_elec_to_CH4 = Set(initialize=["methanation"])
         self.model.from_elec_to_H2 = Set(initialize=["electrolysis"])
         self.model.from_CH4_to_elec = Set(initialize=["ch4_ocgt", "ch4_ccgt"])
@@ -709,7 +709,7 @@ class ModelEOLES():
 
 
         def methane_balance_constraint_rule(model, h):
-            """Constraint on methane's balance. Methane production must satisfy ch4_ccgt and ch4_ocgt plants, CH4 demand."""
+            """Constraint on methane's balance. Methane production must satisfy ch4_ccgt, ch4_ocgt and ocgt_coge plants' CH4 demand."""
 
             supply_h = sum(model.gene[tech, h] for tech in (model.prod_tech & model.CH4_balance))\
                             + sum(model.conv_output[tech, h] for tech in (model.conversion_tech & model.CH4_balance))\

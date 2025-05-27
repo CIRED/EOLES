@@ -952,7 +952,7 @@ def extract_summary(objective, model, elec_demand, H2_demand, H2_demand_is_profi
             gene_elec_new_installation += gene_per_tech.at[tech]*(capacity.at[tech] - existing_capacity.at[tech])/capacity.at[tech]
 
     summary.at["gene_curtailed [TWh]"] = hourly_balance.loc[:, "curtailment"].sum()/1000
-    summary.at["gene_curtailed [%]"] = summary.at["gene_curtailed [TWh]"]/summary.at["gene_elec [TWh]"]
+    summary.at["gene_curtailed [%]"] = summary.at["gene_curtailed [TWh]"]/summary.at["gene_elec [TWh]"]*100
 
 
     gene_CH4 = sum(gene_per_tech.at[tech] for tech in model.CH4_balance)

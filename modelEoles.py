@@ -488,7 +488,7 @@ class ModelEOLES():
 
         def frr_provision_constraint_rule(model, h):
             """Constraint on frr total volume provided"""
-            res_req = sum(self.frr_requirements.at[vre] * model.nominal_power[vre] for vre in model.vre)   # GW
+            res_req = sum(self.frr_requirements.at[vre] * model.nominal_power[vre] for vre in (model.vre & model.prod_tech))   # GW
             load_req = self.elec_demand.iat[h] * self.load_uncertainty * (1 + self.load_variation)   #GW
             return sum(model.frr[tech, h] for tech in model.reserve)*10 == (res_req + load_req)*10*int(self.include_reserve)   # GW
 
@@ -567,7 +567,10 @@ class ModelEOLES():
 
         def generation_vre_constraint_rule(model, h, tech):
             """Constraint on variables renewable profiles generation."""
-            return model.gene[tech, h]*1000 == model.nominal_power[tech] * self.vre_profiles.iloc[h, self.vre_profiles.columns.get_loc(tech)]*1000   # GW
+            if tech in model.prod_tech :
+                return model.gene[tech, h]*1000 == model.nominal_power[tech] * self.vre_profiles.iloc[h, self.vre_profiles.columns.get_loc(tech)]*1000   # GW
+            if tech in model.conversion_tech :
+                return model.conv_output[tech, h]*1000 == model.output_power[tech] * self.vre_profiles.iloc[h, self.vre_profiles.columns.get_loc(tech)]*1000   # GW
 
         self.model.generation_vre_constraint = Constraint(self.model.h, self.model.vre, rule=generation_vre_constraint_rule)
 

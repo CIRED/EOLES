@@ -281,9 +281,13 @@ class ModelEOLES():
         self.model.reserve = Set(initialize=["lake", "phs", "ch4_ocgt", "ch4_ccgt", "nuclear", "h2_ccgt", "coal", "battery_1h", "battery_4h", "rsv_dummy"])
         self.model.reserve_ramp_limited = Set(initialize=["ch4_ocgt", "ch4_ccgt", "nuclear", "h2_ccgt", "coal"])
 
-        # Technologies producing each of the primary energy (ie excluding conversion and storage technologies)
-        self.model.elec_prod = Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
+        # Technologies producing each of the energy vectors (ie excluding conversion and storage for primary_prod and excluding storage only for prod)
+        self.model.elec_primary_prod = Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
                                                "river", "lake", "nuclear", "coal", "biomass_coge", "geothermal_coge", "waste", "marine"])
+        self.model.elec_prod = Set(initialize=["offshore_float", "offshore_ground", "onshore", "pv_ground_S", "pv_ground_EW", "pv_roof_com_S", "pv_roof_com_EW", "pv_roof_indiv_S", "pv_roof_indiv_EW",
+                                               "river", "lake", "nuclear", "coal", "biomass_coge", "geothermal_coge", "waste", "marine",
+                                               "ch4_ocgt", "ocgt_coge", "ch4_ccgt", "h2_ccgt"])
+        self.model.CH4_primary_prod = Set(initialize=["methanization", "pyrogazification", "natural_gas"])
         self.model.CH4_prod = Set(initialize=["methanization", "pyrogazification", "methanation", "natural_gas"])
         self.model.H2_prod = Set(initialize=["electrolysis"])
 

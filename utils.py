@@ -287,7 +287,7 @@ def extract_carbon_footprint(model, gene_per_tech, carbon_footprint, nb_years): 
             footprint.at[tech] = gene_per_tech.at[tech]*carbon_footprint.at[tech]/nb_years
     footprint.at["biogas"] = sum(gene_per_tech.at[tech] for tech in model.CH4_balance_biogas)*carbon_footprint.at["biogas"]/nb_years
     footprint.at["elec_network"] = sum(gene_per_tech.at[tech] for tech in model.elec_balance)*carbon_footprint.at["network"]/nb_years
-    footprint.at["elec_network_primarygene"] = sum(gene_per_tech.at[tech] for tech in model.elec_prod)*carbon_footprint.at["network"]/nb_years
+    footprint.at["elec_network_primarygene"] = sum(gene_per_tech.at[tech] for tech in model.elec_primary_prod)*carbon_footprint.at["network"]/nb_years
 
     footprint.at["TOTAL"] = footprint.sum() - footprint.at["elec_network_primarygene"]
 
@@ -900,7 +900,7 @@ def extract_summary(objective, model, elec_demand, H2_demand, H2_demand_is_profi
     else:
         H2_demand_tot = H2_demand / 1000 # H2 demand in TWh
         H2_demand = extract_hourly_demand("H2", model, conversion_efficiency, hourly_balance)
-    summary.at["hydrogen_demand_tot [TWh]"] = H2_demand_tot
+    summary.at["H2_demand_tot [TWh]"] = H2_demand_tot
 
     if CH4_demand_is_profile:
         CH4_demand_tot = CH4_demand.sum() / 1000  # CH4 demand in TWh
@@ -944,7 +944,9 @@ def extract_summary(objective, model, elec_demand, H2_demand, H2_demand_is_profi
 
 
 
-    gene_elec = sum(gene_per_tech.at[tech] for tech in model.elec_balance)
+    primary_gene_elec = sum(gene_per_tech.at[tech] for tech in model.elec_primary_prod)
+    summary.at["primary_gene_elec [TWh]"] = primary_gene_elec
+    gene_elec = sum(gene_per_tech.at[tech] for tech in model.elec_prod)
     summary.at["gene_elec [TWh]"] = gene_elec
     gene_elec_new_installation = 0
     for tech in model.elec_balance:
@@ -952,10 +954,12 @@ def extract_summary(objective, model, elec_demand, H2_demand, H2_demand_is_profi
             gene_elec_new_installation += gene_per_tech.at[tech]*(capacity.at[tech] - existing_capacity.at[tech])/capacity.at[tech]
 
     summary.at["gene_curtailed [TWh]"] = hourly_balance.loc[:, "curtailment"].sum()/1000
-    summary.at["gene_curtailed [%]"] = summary.at["gene_curtailed [TWh]"]/summary.at["gene_elec [TWh]"]*100
+    summary.at["gene_curtailed [%]"] = summary.at["gene_curtailed [TWh]"]/summary.at["primary_gene_elec [TWh]"]*100
 
 
-    gene_CH4 = sum(gene_per_tech.at[tech] for tech in model.CH4_balance)
+    primary_gene_CH4 = sum(gene_per_tech.at[tech] for tech in model.CH4_primary_prod)
+    summary.at["primary_gene_CH4 [TWh]"] = primary_gene_CH4
+    gene_CH4 = sum(gene_per_tech.at[tech] for tech in model.CH4_prod)
     summary.at["gene_CH4 [TWh]"] = gene_CH4
     gene_CH4_new_installation = 0
     for tech in model.CH4_balance:

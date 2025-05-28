@@ -368,7 +368,7 @@ def extract_curtailment(model, conversion_efficiency, hourly_balance):
     for h in model.h:
         elec_supply_h = sum(hourly_balance.iloc[h, hourly_balance.columns.get_loc(tech)] for tech in model.elec_balance)
         elec_usage_h = sum(hourly_balance.iloc[h, hourly_balance.columns.get_loc(tech+"_input")] for tech in model.use_elec)
-        curtailment.iat[h] = elec_supply_h - elec_usage_h - hourly_balance.iloc[h, hourly_balance.columns.get_loc("elec_demand")]
+        curtailment.iat[h] = elec_supply_h - elec_usage_h - hourly_balance.iloc[h, hourly_balance.columns.get_loc("elec_demand_w/_shift")]
         if math.isclose(curtailment.iat[h], 0, abs_tol=1e-09):
             curtailment.iat[h] = 0
 

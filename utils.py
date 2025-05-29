@@ -1427,7 +1427,7 @@ def plot_storage_state_year(hourly_balance, hour, lang="EN"):
 
 
 
-def plot_installed_power(*args):
+def plot_installed_power(lang = "EN", *args):
 
     fig, ax = plt.subplots(figsize=(16, 10))
     cmap= mpl.colormaps["Dark2"]
@@ -1436,33 +1436,58 @@ def plot_installed_power(*args):
     for i, (model, name, installed_power) in enumerate(args):
 
         installed_power_to_plot = pd.Series(dtype=float)
-        installed_power_to_plot.at["Cogeneration"] =  installed_power.at["biomass_coge"] \
-                                    + installed_power.at["geothermal_coge"] \
-                                    + installed_power.at["waste"] \
-                                    + installed_power.at["ocgt_coge"]
-        installed_power_to_plot.at["Hydropower - Other"] = installed_power.at["river"] + installed_power.at["marine"]
-        installed_power_to_plot.at["Wind - onshore"] = installed_power.at["onshore"]
-        installed_power_to_plot.at["Wind - offshore"] = installed_power.at["offshore_ground"] + installed_power.at["offshore_float"]
-        installed_power_to_plot.at["Hydropower - Dams"] = installed_power.at["lake"]
-        installed_power_to_plot.at["Solar"] = sum(installed_power.at[tech] for tech in model.solar)
-        #installed_power_to_plot.at["Nuclear"] = installed_power.at["nuclear"]
-        #installed_power_to_plot.at["Coal"] = installed_power.at["coal"]
-        installed_power_to_plot.at["PHS"] = installed_power.at["phs"]
-        installed_power_to_plot.at["Batteries"] = sum(installed_power.at[tech] for tech in model.battery)
-        installed_power_to_plot.at["CH4 turbines"] = sum(installed_power.at[tech] for tech in model.from_CH4_to_elec)
-        installed_power_to_plot.at["H2 turbines"] = sum(installed_power.at[tech] for tech in model.from_H2_to_elec)
+
+        if lang == "EN" :
+            installed_power_to_plot.at["Cogeneration"] =  installed_power.at["biomass_coge"] \
+                                        + installed_power.at["geothermal_coge"] \
+                                        + installed_power.at["waste"] \
+                                        + installed_power.at["ocgt_coge"]
+            installed_power_to_plot.at["Hydropower - Other"] = installed_power.at["river"] + installed_power.at["marine"]
+            installed_power_to_plot.at["Hydropower - Dams"] = installed_power.at["lake"]
+            installed_power_to_plot.at["Hydropower - PHS"] = installed_power.at["phs"]
+            installed_power_to_plot.at["Wind - Onshore"] = installed_power.at["onshore"]
+            installed_power_to_plot.at["Wind - Offshore"] = installed_power.at["offshore_ground"] + installed_power.at["offshore_float"]
+            installed_power_to_plot.at["Solar"] = sum(installed_power.at[tech] for tech in model.solar)
+            #installed_power_to_plot.at["Nuclear"] = installed_power.at["nuclear"]
+            #installed_power_to_plot.at["Coal"] = installed_power.at["coal"]
+            installed_power_to_plot.at["Batteries"] = sum(installed_power.at[tech] for tech in model.battery)
+            installed_power_to_plot.at["CH4 turbines"] = sum(installed_power.at[tech] for tech in model.from_CH4_to_elec)
+            installed_power_to_plot.at["H2 turbines"] = sum(installed_power.at[tech] for tech in model.from_H2_to_elec)
+        if lang == "FR" :
+            installed_power_to_plot.at["Cogénération"] =  installed_power.at["biomass_coge"] \
+                                        + installed_power.at["geothermal_coge"] \
+                                        + installed_power.at["waste"] \
+                                        + installed_power.at["ocgt_coge"]
+            installed_power_to_plot.at["Hydraulique - Autres"] = installed_power.at["river"] + installed_power.at["marine"]
+            installed_power_to_plot.at["Hydraulique - Barrages"] = installed_power.at["lake"]
+            installed_power_to_plot.at["Hydraulique - STEP"] = installed_power.at["phs"]
+            installed_power_to_plot.at["Eolien - Terrestre"] = installed_power.at["onshore"]
+            installed_power_to_plot.at["Eolien - En mer"] = installed_power.at["offshore_ground"] + installed_power.at["offshore_float"]
+            installed_power_to_plot.at["Photovoltaïque"] = sum(installed_power.at[tech] for tech in model.solar)
+            #installed_power_to_plot.at["Nucléaire"] = installed_power.at["nuclear"]
+            #installed_power_to_plot.at["Charbon"] = installed_power.at["coal"]
+            installed_power_to_plot.at["Batteries"] = sum(installed_power.at[tech] for tech in model.battery)
+            installed_power_to_plot.at["Turbines CH4"] = sum(installed_power.at[tech] for tech in model.from_CH4_to_elec)
+            installed_power_to_plot.at["Turbines H2"] = sum(installed_power.at[tech] for tech in model.from_H2_to_elec)
 
         barWidth = 1/(len(args) + 1)
         bar_pos = [base + i*barWidth for base in range(len(installed_power_to_plot))]
 
         ax.barh(bar_pos, installed_power_to_plot, height=barWidth, label=name)
 
-    ax.legend(loc='upper left', ncol=len(args) + 1, bbox_to_anchor=(0, +1.06), frameon=False, columnspacing=0.5)
-    ax.text(x=0.132, y=0.93, s="Installed Power of each technology", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
+
+    if lang == "EN":
+        ax.legend(loc='upper left', ncol=len(args) + 1, bbox_to_anchor=(0, +1.06), frameon=False, columnspacing=0.5)
+        ax.text(x=0.132, y=0.93, s="Installed Power of each technology", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
+        ax.set_xlabel("Installed power [GW]", fontsize=12)
+    if lang == "FR":
+        ax.legend(loc='upper left', ncol=len(args) + 1, bbox_to_anchor=(0, +1.06), frameon=False, columnspacing=0.5)
+        ax.text(x=0.132, y=0.93, s="Puissance installée de chaque technologie", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
+        ax.set_xlabel("Puissance installée [GW]", fontsize=12)
+    
     ax.set_yticks([base + (len(args)//2)*barWidth for base in range(len(installed_power_to_plot))],
                   installed_power_to_plot.index)
     ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(10))
-    ax.set_xlabel("Installed power [GW]", fontsize=12)
     ax.xaxis.grid(True)
     ax.set_axisbelow(True)
 

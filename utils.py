@@ -1611,7 +1611,7 @@ def compare_operable_mix(names, results, lang="EN"):
 
 
 
-    ax.legend()
+    ax.legend(loc='upper left', ncol=2, frameon=False)
 
     plt.show()
 

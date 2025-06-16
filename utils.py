@@ -327,8 +327,8 @@ def extract_hourly_balance(model, elec_demand, H2_demand, CH4_demand, conversion
         hourly_balance.loc[:, tech + "_input"] = value(model.str_input[tech, :])  # GW
         hourly_balance.loc[:, tech + "_state_charge"] = value(model.state_of_charge[tech, :])  # GW
     hourly_balance.loc[:, "lake_state_charge"] = value(model.lake_stored[:])  # GW
-    hourly_balance.loc[:, "storage_input_losses"] = sum(hourly_balance.loc[:, tech + "_input"]*eta_in.at[tech] for tech in model.str)
-    hourly_balance.loc[:, "storage_output_losses"] = sum(hourly_balance.loc[:, tech]*eta_out.at[tech] for tech in model.str)
+    hourly_balance.loc[:, "storage_input_losses"] = sum(hourly_balance.loc[:, tech + "_input"]*(1 - eta_in.at[tech]) for tech in model.str)
+    hourly_balance.loc[:, "storage_output_losses"] = sum(hourly_balance.loc[:, tech]*(1/eta_out.at[tech] - 1) for tech in model.str)
 
     return hourly_balance  # GW
 

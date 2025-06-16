@@ -1371,41 +1371,65 @@ def plot_elec_residual_balance_week(model, hourly_balance, installed_power, hour
 
 
 
-def plot_storage_state_year(hourly_balance, hour, lang="EN"):
+def plot_storage_state_year(hourly_balance, hour, nb_years=1, select_tech=["ch4_reservoir", "h2_saltcavern", "lake", "phs", "battery", "str_dummy"], lang="EN"):
 
     fig, ax = plt.subplots(figsize=(16, 10))
 
 
     elec_str = pd.DataFrame(dtype=float)
     if lang == "EN":
-        elec_str.loc[:, "Methane"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("ch4_reservoir_state_charge")]
-        elec_str.loc[:, "Hydrogen"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("h2_saltcavern_state_charge")]
-        elec_str.loc[:, "Hydropower"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("lake_state_charge")]
-        elec_str.loc[:, "PHS"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("phs_state_charge")]
-        elec_str.loc[:, "Batteries"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("battery_1h_state_charge")] + -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("battery_4h_input")]
-        elec_str.loc[:, "Missing storage"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("str_dummy_state_charge")]
+        if "ch4_reservoir" in select_tech:
+            elec_str.loc[:, "Methane"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("ch4_reservoir_state_charge")]
+        if "h2_saltcavern" in select_tech:
+            elec_str.loc[:, "Hydrogen"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("h2_saltcavern_state_charge")]
+        if "lake" in select_tech:
+            elec_str.loc[:, "Hydropower"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("lake_state_charge")]
+        if "phs" in select_tech:
+            elec_str.loc[:, "PHS"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("phs_state_charge")]
+        if "battery" in select_tech:
+            elec_str.loc[:, "Batteries"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("battery_1h_state_charge")] + hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("battery_4h_input")]
+        if "str_dummy" in select_tech:
+            elec_str.loc[:, "Missing storage"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("str_dummy_state_charge")]
     if lang == "FR":
-        elec_str.loc[:, "Méthane"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("ch4_reservoir_state_charge")]
-        elec_str.loc[:, "Hydrogène"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("h_saltcavern_state_charge")]
-        elec_str.loc[:, "Hydraulique"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("lake_state_charge")]
-        elec_str.loc[:, "STEP"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("phs_state_charge")]
-        elec_str.loc[:, "Batteries"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("battery_1h_state_charge")] + -hourly_balance.iloc[hour:(hour+7*24), hourly_balance.columns.get_loc("battery_4h_input")]
-        elec_str.loc[:, "Stockage manquant"] = hourly_balance.iloc[hour:(hour+8760*24), hourly_balance.columns.get_loc("str_dummy_state_charge")]
+        if "ch4_reservoir" in select_tech:
+            elec_str.loc[:, "Méthane"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("ch4_reservoir_state_charge")]
+        if "h2_saltcavern" in select_tech:
+            elec_str.loc[:, "Hydrogène"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("h2_saltcavern_state_charge")]
+        if "lake" in select_tech:
+            elec_str.loc[:, "Hydraulique"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("lake_state_charge")]
+        if "phs" in select_tech:
+            elec_str.loc[:, "STEP"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("phs_state_charge")]
+        if "battery" in select_tech:
+            elec_str.loc[:, "Batteries"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("battery_1h_state_charge")] + hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("battery_4h_input")]
+        if "str_dummy" in select_tech:
+            elec_str.loc[:, "Stockage manquant"] = hourly_balance.iloc[hour:(hour+8760*nb_years), hourly_balance.columns.get_loc("str_dummy_state_charge")]
 
     time = pd.to_datetime(elec_str.index.get_level_values(0).to_series().reset_index(drop=True).astype("str") + ' ' + elec_str.index.get_level_values(1).to_series().reset_index(drop=True).astype("str"), format="%Y-%m-%d %H")
 
-    colors_str = ["#f20809", "#f252c0", "#2672b0", "#0e4269", "#80549f", "#757575"]
+    colors_str = []
+    if "ch4_reservoir" in select_tech:
+        colors_str.append("#f20809")
+    if "h2_saltcavern" in select_tech:
+        colors_str.append("#f252c0")
+    if "lake" in select_tech:
+        colors_str.append("#2672b0")
+    if "phs" in select_tech:
+        colors_str.append("#0e4269")
+    if "battery" in select_tech:
+        colors_str.append("#80549f")
+    if "str_dummy" in select_tech:
+        colors_str.append("#757575")
 
     handles_str = ax.stackplot(time, elec_str.T, labels=elec_str.columns, colors=colors_str)
 
     if lang == "EN":
         ax.set_ylabel('State of charge [GWh]', fontsize=12, labelpad=10)
-        ax.text(x=0.06, y=0.93, s="All Storage State-of-Charge Over the Year", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
+        ax.text(x=0.06, y=0.93, s=f"Storage State-of-Charge Over {nb_years} Year(s)", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
         leg_str = ax.legend(handles=handles_str, loc='upper center', ncol=len(elec_str.columns) + 1,
                   bbox_to_anchor=(0.19, +1.06), frameon=False, columnspacing=0.5)
     if lang == "FR":
         ax.set_ylabel('Niveau de charge [GWh]', fontsize=12, labelpad=10)
-        ax.text(x=0.06, y=0.93, s="Niveau de charge sur un an", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
+        ax.text(x=0.06, y=0.93, s=f"Niveau de charge sur {nb_years} an(s)", transform=fig.transFigure, ha='left', fontsize=16, weight='bold')
         leg_str = ax.legend(handles=handles_str, loc='upper center', ncol=len(elec_str.columns) + 1,
                   bbox_to_anchor=(0.22, +1.06), frameon=False, columnspacing=0.5)
 
@@ -1414,7 +1438,10 @@ def plot_storage_state_year(hourly_balance, hour, lang="EN"):
     ax.yaxis.set_tick_params(pad=2, bottom=True, labelsize=12)
     ax.set_ylim([elec_str.sum(axis=1).min(), None])
     ax.spines[['top','right','bottom']].set_visible(False)
-    ax.xaxis.set_major_locator(mpl.dates.MonthLocator())
+    if nb_years < 4 :
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator())
+    else :
+        ax.xaxis.set_major_locator(mpl.dates.YearLocator())
     ax.xaxis.grid(True)
     ax.set_axisbelow(True)
 
